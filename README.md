@@ -9,7 +9,16 @@ A Microsoft Edge browser extension that automatically labels AWS account license
 - **Real-time Updates**: Labels update automatically when mappings are changed
 - **Persistent Storage**: Mappings are saved using Chrome sync storage and persist across sessions
 
-## Installation
+## Quick Install
+
+**Latest Release**: [Download and install the latest version](https://github.com/digitalspace/bcgov-access-portal/releases/latest)
+
+1. Click the link above
+2. Download the `.zip` file from the Assets section
+3. Extract the ZIP file to a folder
+4. Follow the manual installation steps below
+
+## Manual Installation
 
 1. Open Microsoft Edge browser
 2. Navigate to `edge://extensions/`
@@ -60,15 +69,7 @@ bcgov-access-portal/
 └── README.md             # This file
 ```
 
-## Adding Icons
 
-To complete the extension, add icon images to the `icons/` folder:
-
-- `icon16.png` (16×16 pixels)
-- `icon48.png` (48×48 pixels)
-- `icon128.png` (128×128 pixels)
-
-These icons will appear in the extension toolbar and management page.
 
 ## Technical Details
 

@@ -1,0 +1,92 @@
+name: Build and Release Extension
+
+on:
+  push:
+    branches:
+      - master
+      - main
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Get current version
+        id: get_version
+        run: |
+          VERSION=$(jq -r '.version' manifest.json)
+          echo "current_version=$VERSION" >> $GITHUB_OUTPUT
+          
+      - name: Bump version
+        id: bump_version
+        run: |
+          CURRENT_VERSION="${{ steps.get_version.outputs.current_version }}"
+          IFS='.' read -ra VERSION_PARTS <<< "$CURRENT_VERSION"
+          MAJOR=${VERSION_PARTS[0]}
+          MINOR=${VERSION_PARTS[1]}
+          PATCH=${VERSION_PARTS[2]}
+          PATCH=$((PATCH + 1))
+          NEW_VERSION="$MAJOR.$MINOR.$PATCH"
+          
+          jq --arg version "$NEW_VERSION" '.version = $version' manifest.json > manifest.json.tmp
+          mv manifest.json.tmp manifest.json
+          
+          echo "new_version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Build extension package
+        run: |
+          mkdir -p dist
+          zip -r dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip \
+            manifest.json \
+            content.js \
+            popup.html \
+            popup.js \
+            styles.css \
+            mapping.json \
+            icons/ \
+            -x "*.git*" "*.md" "dist/*"
+
+      - name: Commit version bump
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add manifest.json
+          git commit -m "Bump version to ${{ steps.bump_version.outputs.new_version }}"
+          git push
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.bump_version.outputs.new_version }}
+          name: Release v${{ steps.bump_version.outputs.new_version }}
+          body: |
+            ## AWS Account Label Helper v${{ steps.bump_version.outputs.new_version }}
+            
+            ### Installation
+            1. Download `bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip` below
+            2. Extract the ZIP file
+            3. Open Edge and go to `edge://extensions/`
+            4. Enable "Developer mode"
+            5. Click "Load unpacked" and select the extracted folder
+            
+            ### What's Changed
+            - Automated release build
+          files: |
+            dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
