@@ -1,0 +1,47 @@
+/* AWS Account Label Helper - Content Script Styles */
+/* Styles for the labels injected next to license plates */
+
+.aws-account-label {
+  display: inline-block;
+  margin-left: 12px;
+  padding: 4px 10px;
+  color: white;
+  font-size: 12px;
+  font-weight: 600;
+  border-radius: 12px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  white-space: nowrap;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  letter-spacing: 0.3px;
+  animation: fadeIn 0.3s ease-in;
+}
+
+.aws-account-label-dev {
+  background: #6b7280;
+  color: white;
+}
+
+.aws-account-label-prod {
+  background: #16a34a;
+  color: white;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .aws-account-label {
+    font-size: 11px;
+    padding: 3px 8px;
+    margin-left: 8px;
+  }
+}
