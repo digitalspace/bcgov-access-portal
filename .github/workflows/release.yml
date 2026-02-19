@@ -85,7 +85,11 @@ jobs:
             5. Click "Load unpacked" and select the extracted folder
             
             ### What's Changed
-            - Automated release build
+            - **Access Keys Sync (optional)** — One-click credential push from the SSO portal to `~/.aws/credentials` on local and remote machines via a native messaging host
+            - New "Update Access Keys" button on each labeled account in the portal
+            - Popup UI for enabling the feature and configuring credential targets (local + SSH)
+            - Native messaging host (`native-host/`) for writing credentials locally or over SSH
+            - Background service worker to bridge content script and native host
           files: |
             dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip
           draft: false
