@@ -5,8 +5,13 @@
   "description": "Labels AWS license plates with friendly product names for BC Gov accounts",
   "permissions": [
     "storage",
-    "activeTab"
+    "activeTab",
+    "nativeMessaging",
+    "tabs"
   ],
+  "background": {
+    "service_worker": "background.js"
+  },
   "action": {
     "default_popup": "popup.html",
     "default_icon": {

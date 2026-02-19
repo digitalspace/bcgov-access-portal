@@ -162,6 +162,148 @@
       color: #c5221f;
       border: 1px solid #f4c7c3;
     }
+
+    .divider {
+      border: none;
+      border-top: 1px solid #e0e0e0;
+      margin: 20px 0;
+    }
+
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .toggle-row label {
+      font-size: 13px;
+      color: #333;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .toggle-row input[type="checkbox"] {
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+    }
+
+    .target-list {
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .target-item {
+      display: flex;
+      align-items: center;
+      padding: 8px 12px;
+      border-bottom: 1px solid #f0f0f0;
+      gap: 8px;
+      font-size: 13px;
+    }
+
+    .target-item:last-child {
+      border-bottom: none;
+    }
+
+    .target-item:hover {
+      background-color: #f8f8f8;
+    }
+
+    .target-label {
+      font-weight: 600;
+      color: #333;
+      min-width: 80px;
+    }
+
+    .target-type {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+
+    .target-type-local {
+      background: #e8f0fe;
+      color: #0066cc;
+    }
+
+    .target-type-ssh {
+      background: #fef3e0;
+      color: #e65100;
+    }
+
+    .target-info {
+      flex: 1;
+      color: #666;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+    }
+
+    .add-target-form {
+      margin-top: 12px;
+    }
+
+    .form-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .form-row label {
+      font-size: 12px;
+      color: #666;
+      min-width: 50px;
+    }
+
+    .form-row input, .form-row select {
+      padding: 6px 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 13px;
+      font-family: inherit;
+      flex: 1;
+    }
+
+    .form-row select {
+      flex: 0 0 auto;
+      width: 90px;
+    }
+
+    .form-row input:focus, .form-row select:focus {
+      outline: none;
+      border-color: #0066cc;
+    }
+
+    .ssh-fields {
+      display: none;
+    }
+
+    .ssh-fields.visible {
+      display: block;
+    }
+
+    .setup-notice {
+      background: #fff8e1;
+      border: 1px solid #ffecb3;
+      border-radius: 4px;
+      padding: 10px;
+      font-size: 12px;
+      color: #6d4c00;
+      margin-bottom: 12px;
+    }
+
+    .setup-notice code {
+      background: #f5f5f5;
+      padding: 1px 4px;
+      border-radius: 2px;
+      font-size: 11px;
+    }
   </style>
 </head>
 <body>
@@ -195,6 +337,52 @@
     </div>
   </div>
   
+  <hr class="divider">
+
+  <div class="section">
+    <div class="section-title">Access Keys Sync</div>
+    <div class="toggle-row">
+      <input type="checkbox" id="accessKeysToggle">
+      <label for="accessKeysToggle">Enable Access Keys Sync</label>
+    </div>
+
+    <div id="accessKeysSection" style="display: none;">
+      <div id="setupNotice" class="setup-notice" style="display: none;">
+        Native host not detected. Run <code>native-host/install.sh</code> from the extension directory to set up the credential helper.
+      </div>
+
+      <div class="section-title" style="margin-top: 12px;">Credential Targets</div>
+      <div id="targetList" class="target-list">
+        <div class="empty-state" style="padding: 20px;">No targets configured.</div>
+      </div>
+
+      <div class="add-target-form">
+        <div class="form-row">
+          <label for="targetType">Type</label>
+          <select id="targetType">
+            <option value="local">Local</option>
+            <option value="ssh">SSH</option>
+          </select>
+          <label for="targetLabel">Label</label>
+          <input type="text" id="targetLabel" placeholder="e.g. Localhost">
+        </div>
+        <div id="sshFields" class="ssh-fields">
+          <div class="form-row">
+            <label for="sshUser">User</label>
+            <input type="text" id="sshUser" placeholder="mark">
+            <label for="sshHost">Host</label>
+            <input type="text" id="sshHost" placeholder="192.168.66.124">
+          </div>
+        </div>
+        <div class="form-row">
+          <label for="credPath">Path</label>
+          <input type="text" id="credPath" placeholder="~/.aws/credentials" value="~/.aws/credentials">
+          <button id="addTargetBtn">Add</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <script src="popup.js"></script>
 </body>
 </html>
