@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "AWS Account Label Helper",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Labels AWS license plates with friendly product names for BC Gov accounts",
   "permissions": [
     "storage",
