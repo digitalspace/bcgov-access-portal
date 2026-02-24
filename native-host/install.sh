@@ -16,7 +16,7 @@ MANIFEST_TEMPLATE="$SCRIPT_DIR/$HOST_NAME.json"
 MANIFEST_DIRS=()
 
 # Default config directories
-for dir in "$HOME/.config/microsoft-edge" "$HOME/.config/google-chrome" "$HOME/.config/chromium"; do
+for dir in "$HOME/.config/microsoft-edge" "$HOME/.config/google-chrome" "$HOME/.config/chromium" "$HOME/.config/BraveSoftware/Brave-Browser"; do
   if [ -d "$dir" ]; then
     MANIFEST_DIRS+=("$dir/NativeMessagingHosts")
   fi
@@ -31,7 +31,7 @@ done
 
 if [ ${#MANIFEST_DIRS[@]} -eq 0 ]; then
   echo "Error: Could not find a supported Chromium-based browser config directory."
-  echo "Supported: Microsoft Edge, Google Chrome, Chromium"
+  echo "Supported: Microsoft Edge, Google Chrome, Chromium, Brave"
   exit 1
 fi
 
@@ -49,7 +49,7 @@ chmod +x "$HOST_JS"
 # Get the extension ID - prompt user
 echo ""
 echo "To complete setup, you need the extension ID."
-echo "1. Open edge://extensions/ (or chrome://extensions/)"
+echo "1. Open edge://extensions/ (or chrome://extensions/ or brave://extensions/)"
 echo "2. Find 'AWS Account Label Helper' and copy its ID"
 echo ""
 read -p "Enter the extension ID: " EXTENSION_ID
