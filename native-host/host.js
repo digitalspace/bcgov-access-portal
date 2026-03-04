@@ -198,8 +198,11 @@ chmod 600 "$CRED_PATH"
 `;
 
   try {
+    // Use double quotes for Windows cmd.exe compatibility (single quotes
+    // are not string delimiters in cmd.exe). Double quotes work on both
+    // Linux /bin/sh and Windows cmd.exe.
     execSync(
-      `ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 '${user}@${host}' 'sh -s'`,
+      `ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 "${user}@${host}" "sh -s"`,
       {
         input: script,
         encoding: 'utf8',

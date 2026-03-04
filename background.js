@@ -23,4 +23,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     );
     return true; // keep channel open for async response
   }
+
+  if (message.action === 'pingNativeHost') {
+    chrome.runtime.sendNativeMessage(
+      'com.bcgov.aws_credential_helper',
+      { action: 'ping' },
+      (response) => {
+        if (chrome.runtime.lastError) {
+          sendResponse({ success: false, error: chrome.runtime.lastError.message });
+        } else {
+          sendResponse(response);
+        }
+      }
+    );
+    return true;
+  }
 });

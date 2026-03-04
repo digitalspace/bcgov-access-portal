@@ -290,20 +290,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     notifyRefresh();
   }
 
-  // Check if native host is installed
+  // Check if native host is installed (routed through service worker
+  // because some Chromium browsers only allow sendNativeMessage from
+  // the background context, not from popups)
   function checkNativeHost() {
     try {
-      chrome.runtime.sendNativeMessage(
-        'com.bcgov.aws_credential_helper',
-        { action: 'ping' },
-        (response) => {
-          if (chrome.runtime.lastError || !response) {
-            setupNotice.style.display = 'block';
-          } else {
-            setupNotice.style.display = 'none';
-          }
+      chrome.runtime.sendMessage({ action: 'pingNativeHost' }, (response) => {
+        if (chrome.runtime.lastError || !response || !response.success) {
+          setupNotice.style.display = 'block';
+        } else {
+          setupNotice.style.display = 'none';
         }
-      );
+      });
     } catch (e) {
       setupNotice.style.display = 'block';
     }
