@@ -76,20 +76,24 @@ jobs:
           name: Release v${{ steps.bump_version.outputs.new_version }}
           body: |
             ## AWS Account Label Helper v${{ steps.bump_version.outputs.new_version }}
-            
+
             ### Installation
             1. Download `bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip` below
             2. Extract the ZIP file
-            3. Open Edge and go to `edge://extensions/`
+            3. Open your browser and go to `edge://extensions/`, `chrome://extensions/`, or `brave://extensions/`
             4. Enable "Developer mode"
             5. Click "Load unpacked" and select the extracted folder
-            
-            ### What's Changed
-            - **Access Keys Sync (optional)** — One-click credential push from the SSO portal to `~/.aws/credentials` on local and remote machines via a native messaging host
-            - New "Update Access Keys" button on each labeled account in the portal
-            - Popup UI for enabling the feature and configuring credential targets (local + SSH)
-            - Native messaging host (`native-host/`) for writing credentials locally or over SSH
-            - Background service worker to bridge content script and native host
+
+            ### Access Keys Sync Setup (optional)
+            To enable one-click credential push from the SSO portal:
+            - **Linux:** Run `native-host/install.sh` from the extension directory
+            - **Windows:** Run `bash native-host/install_win.sh` from Git Bash
+
+            ### Features
+            - Labels AWS license plates with friendly product names on the BC Gov SSO portal
+            - **Access Keys Sync** — One-click credential push to `~/.aws/credentials` on local and remote machines
+            - Popup UI for managing label mappings and configuring credential targets (local + SSH)
+            - Supports Microsoft Edge, Google Chrome, Chromium, and Brave on Linux and Windows
           files: |
             dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip
           draft: false
