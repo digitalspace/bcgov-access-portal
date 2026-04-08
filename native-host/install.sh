@@ -7,6 +7,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 HOST_NAME="com.bcgov.aws_credential_helper"
 HOST_JS="$SCRIPT_DIR/host.js"
+HOST_WRAPPER="$SCRIPT_DIR/host-wrapper.sh"
 MANIFEST_TEMPLATE="$SCRIPT_DIR/$HOST_NAME.json"
 
 # Detect browser config directories to install the manifest into.
@@ -41,10 +42,21 @@ if ! command -v node &> /dev/null; then
   exit 1
 fi
 
-echo "Node.js found: $(node --version)"
+NODE_PATH="$(command -v node)"
+BASH_PATH="$(command -v bash)"
+echo "Node.js found: $(node --version) at $NODE_PATH"
 
 # Make host.js executable
 chmod +x "$HOST_JS"
+
+# Create a wrapper script that uses absolute paths for both bash and node.
+# Browsers launch native messaging hosts with a minimal PATH that may not
+# include node or bash (e.g. on NixOS), so we resolve paths at install time.
+cat > "$HOST_WRAPPER" << WRAPPER
+#!$BASH_PATH
+exec "$NODE_PATH" "$HOST_JS" "\$@"
+WRAPPER
+chmod +x "$HOST_WRAPPER"
 
 # Get the extension ID - prompt user
 echo ""
@@ -66,7 +78,7 @@ for MANIFEST_DIR in "${MANIFEST_DIRS[@]}"; do
 {
   "name": "$HOST_NAME",
   "description": "AWS Credential Helper for BC Gov Access Portal Extension",
-  "path": "$HOST_JS",
+  "path": "$HOST_WRAPPER",
   "type": "stdio",
   "allowed_origins": [
     "chrome-extension://$EXTENSION_ID/"
@@ -78,6 +90,7 @@ done
 
 echo ""
 echo "Native messaging host installed successfully!"
+echo "  Wrapper: $HOST_WRAPPER"
 echo "  Host: $HOST_JS"
 echo ""
 echo "You can now enable 'Access Keys Sync' in the extension popup."
