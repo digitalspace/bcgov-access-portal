@@ -79,7 +79,7 @@ function expandHome(filepath) {
 // Extract profile name from credentials block (first line like [profile-name])
 function extractProfileName(block) {
   const match = block.match(/^\[([^\]]+)\]/m);
-  return match ? match[1] : null;
+  return match ? match[1].trim() : null;
 }
 
 // Update a single profile in an INI-style credentials file
@@ -90,14 +90,14 @@ function updateCredentialsContent(existingContent, newBlock) {
   }
 
   // Ensure newBlock ends with a newline
-  const normalizedBlock = newBlock.trimEnd() + '\n';
+  const normalizedBlock = newBlock.replace(/\r/g, '').trimEnd() + '\n';
 
   if (!existingContent || existingContent.trim() === '') {
     return normalizedBlock;
   }
 
   // Split into sections: find each [section] header
-  const lines = existingContent.split('\n');
+  const lines = existingContent.replace(/\r/g, '').split('\n');
   const sections = [];
   let currentSection = null;
 
@@ -105,7 +105,7 @@ function updateCredentialsContent(existingContent, newBlock) {
     const headerMatch = line.match(/^\[([^\]]+)\]/);
     if (headerMatch) {
       if (currentSection) sections.push(currentSection);
-      currentSection = { name: headerMatch[1], lines: [line] };
+      currentSection = { name: headerMatch[1].trim(), lines: [line] };
     } else if (currentSection) {
       currentSection.lines.push(line);
     } else {
@@ -164,7 +164,8 @@ function updateLocal(credentialsBlock, credentialsPath) {
 function updateSSH(credentialsBlock, user, host, credentialsPath) {
   const profileName = extractProfileName(credentialsBlock);
   const escapedPath = credentialsPath.replace(/'/g, "'\\''");
-  const escapedBlock = credentialsBlock.replace(/\\/g, '\\\\').replace(/'/g, "'\\''").replace(/\n/g, '\\n');
+  const cleanBlock = credentialsBlock.replace(/\r/g, '');
+  const escapedBlock = cleanBlock.replace(/\\/g, '\\\\').replace(/'/g, "'\\''").replace(/\n/g, '\\n');
 
   const script = `
 set -e

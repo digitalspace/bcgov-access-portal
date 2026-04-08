@@ -178,7 +178,7 @@
         if (!table) return null;
 
         // table.textContent gives us the clean credentials block
-        const text = table.textContent.trim();
+        const text = table.textContent.replace(/\r/g, '').trim();
         if (text.includes('aws_access_key_id')) return text;
         return null;
       });
