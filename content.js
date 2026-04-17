@@ -115,25 +115,32 @@
     setButtonState(btn, 'loading', 'Opening...');
 
     try {
-      // Step 1: Find the expandable account button that contains our button.
-      // Walk up the DOM until we find an element with aria-expanded attribute.
-      const accountButton = btn.closest('[aria-expanded]');
-      if (!accountButton) {
-        throw new Error('Could not find account button');
+      // Step 1: Find the account row in the treegrid.
+      // The portal renders accounts as <tr aria-level="1"> inside table[role=treegrid].
+      const accountRow = btn.closest('tr');
+      if (!accountRow) {
+        throw new Error('Could not find account row');
       }
 
-      // Step 2: Ensure the account is expanded.
-      // If collapsed, click to expand and wait for content to appear.
-      if (accountButton.getAttribute('aria-expanded') !== 'true') {
-        accountButton.click();
-        await new Promise(r => setTimeout(r, 500));
+      // Step 2: Ensure the row is expanded.
+      // When expanded, role rows (aria-level="2") appear as subsequent siblings.
+      // If not expanded, click the toggle button inside the expandable cell.
+      const isExpanded = () => {
+        const next = accountRow.nextElementSibling;
+        return next && next.tagName === 'TR' && next.getAttribute('aria-level') === '2';
+      };
+
+      if (!isExpanded()) {
+        const expandCell = accountRow.querySelector('[class*="body-cell-expandable"]');
+        const expandBtn = expandCell ? expandCell.querySelector('button') : null;
+        if (expandBtn) {
+          expandBtn.click();
+          await new Promise(r => setTimeout(r, 500));
+        }
       }
 
-      // Step 3: Find the "Access keys" link.
-      // It's a sibling element AFTER the account button in the DOM.
-      // Look for a[data-testid="role-creation-action-button"] or a[role="button"]
-      // containing "Access keys" text, stopping at the next expandable account button.
-      const accessKeysLink = findAccessKeysLink(accountButton);
+      // Step 3: Find the "Access keys" link inside the expanded child rows.
+      const accessKeysLink = findAccessKeysLink(accountRow);
       if (!accessKeysLink) {
         throw new Error('Could not find "Access keys" link. Is the account expanded?');
       }
@@ -187,8 +194,13 @@
         throw new Error('Could not extract credentials');
       }
 
-      // Step 7: Close the dialog.
-      const closeBtn = document.querySelector('button[aria-label="Close"]');
+      // Step 7: Close the dialog. Scope the Close button lookup to the modal
+      // (rooted at the heading's ancestor) to avoid clicking an unrelated Close
+      // button elsewhere on the page.
+      const modalRoot = dialogHeading.closest('[role="dialog"]')
+        || dialogHeading.closest('[class*="awsui_root"]')
+        || document;
+      const closeBtn = modalRoot.querySelector('button[aria-label="Close"]');
       if (closeBtn) closeBtn.click();
 
       // Step 8: Load targets and send to background.
@@ -231,31 +243,19 @@
     }
   }
 
-  // Find the "Access keys" link that follows an expanded account button.
-  // The link is a sibling element after the account button, before the next account button.
-  function findAccessKeysLink(accountButton) {
-    let sibling = accountButton.nextElementSibling;
-    while (sibling) {
-      // Stop if we hit the next expandable account button
-      if (sibling.getAttribute('aria-expanded') !== null) break;
-
-      // Check if this is the "Access keys" link
-      // Primary: data-testid attribute (most stable)
-      if (sibling.matches('a[data-testid="role-creation-action-button"]')) {
-        return sibling;
+  // Find the "Access keys" link in the role rows that follow an expanded account row.
+  // Role rows are sibling <tr aria-level="2"> elements after the <tr aria-level="1"> account row.
+  function findAccessKeysLink(accountRow) {
+    let sibling = accountRow.nextElementSibling;
+    while (sibling && sibling.tagName === 'TR') {
+      const level = sibling.getAttribute('aria-level');
+      if (level === '1') break;
+      if (level === '2') {
+        const link = sibling.querySelector('a[data-testid="role-creation-action-button"]');
+        if (link) return link;
+        const byText = sibling.querySelector('a[role="button"]');
+        if (byText && byText.textContent.trim().toLowerCase().startsWith('access key')) return byText;
       }
-      // Fallback: role="button" with matching text
-      if (sibling.getAttribute('role') === 'button' && sibling.textContent.trim().startsWith('Access keys')) {
-        return sibling;
-      }
-      // Also check children (in case it's wrapped in a div)
-      const nested = sibling.querySelector('a[data-testid="role-creation-action-button"]');
-      if (nested) return nested;
-      const nestedByText = sibling.querySelector('a[role="button"]');
-      if (nestedByText && nestedByText.textContent.trim().startsWith('Access keys')) {
-        return nestedByText;
-      }
-
       sibling = sibling.nextElementSibling;
     }
     return null;
@@ -284,16 +284,16 @@
                 node.parentNode.insertBefore(label, node.nextSibling);
               }
 
-              // Insert "Update Access Keys" button if feature is enabled
+              // Insert "Update Access Keys" button in the last cell of the row
+              // so it appears at the far right and isn't cramped in the Account Name cell.
               if (accessKeysEnabled) {
-                // Find the label we just inserted (or existing one)
-                const labelEl = node.nextSibling;
-                if (labelEl && labelEl.classList && labelEl.classList.contains('aws-account-label')) {
-                  // Check if button already exists after the label
-                  const afterLabel = labelEl.nextSibling;
-                  if (!afterLabel || !afterLabel.classList || !afterLabel.classList.contains('aws-update-keys-btn')) {
+                const row = element.closest('tr');
+                if (row) {
+                  const cells = row.querySelectorAll('th, td');
+                  const lastCell = cells[cells.length - 1];
+                  if (lastCell && !lastCell.querySelector('.aws-update-keys-btn')) {
                     const btn = createUpdateKeysButton(text);
-                    labelEl.parentNode.insertBefore(btn, labelEl.nextSibling);
+                    lastCell.appendChild(btn);
                   }
                 }
               }

@@ -90,8 +90,9 @@ jobs:
             - **Windows:** Run `bash native-host/install_win.sh` from Git Bash
 
             ### What's Changed
-            - Fix duplicate profiles and `^M` characters in `~/.aws/credentials` when syncing access keys
-            - Native host installer now creates a wrapper script with absolute paths (fixes NixOS and other non-standard PATH environments)
+            - Adapt to the AWS SSO portal's new treegrid-based account list UI
+            - Move the Update Access Keys button to the end of each account row so it's no longer clipped by the narrow Account Name cell
+            - Reliably close the credentials dialog after syncing (scope the Close button lookup to the modal)
             - Supports Microsoft Edge, Google Chrome, Chromium, and Brave on Linux and Windows
           files: |
             dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip
