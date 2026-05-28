@@ -37,6 +37,18 @@
         "styles.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://login.nimbus.cloud.gov.bc.ca/*"
+      ],
+      "js": [
+        "nimbus-content.js"
+      ],
+      "css": [
+        "styles.css"
+      ],
+      "run_at": "document_idle"
     }
   ]
 }

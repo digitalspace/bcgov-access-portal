@@ -140,13 +140,22 @@ function updateCredentialsContent(existingContent, newBlock) {
 
 // --- Target Handlers ---
 
-function updateLocal(credentialsBlock, credentialsPath) {
+function updateLocal(credentialsBlock, credentialsPath, writeMode) {
   const filePath = expandHome(credentialsPath);
   const dir = path.dirname(filePath);
 
   // Ensure directory exists
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true, mode: 0o700 });
+  }
+
+  if (writeMode === 'overwrite') {
+    // Write the block verbatim. Used by sources (e.g. Nimbus) whose payload
+    // is not INI-shaped and shouldn't be merged into an existing profile file.
+    const content = credentialsBlock.replace(/\r/g, '');
+    const normalized = content.endsWith('\n') ? content : content + '\n';
+    fs.writeFileSync(filePath, normalized, { mode: 0o600 });
+    return { success: true, message: `Wrote ${normalized.length} bytes` };
   }
 
   let existing = '';
@@ -161,11 +170,36 @@ function updateLocal(credentialsBlock, credentialsPath) {
   return { success: true, message: `Profile [${profileName}] updated` };
 }
 
-function updateSSH(credentialsBlock, user, host, credentialsPath) {
-  const profileName = extractProfileName(credentialsBlock);
+function updateSSH(credentialsBlock, user, host, credentialsPath, writeMode) {
   const escapedPath = credentialsPath.replace(/'/g, "'\\''");
   const cleanBlock = credentialsBlock.replace(/\r/g, '');
   const escapedBlock = cleanBlock.replace(/\\/g, '\\\\').replace(/'/g, "'\\''").replace(/\n/g, '\\n');
+
+  if (writeMode === 'overwrite') {
+    const script = `
+set -e
+CRED_PATH="${escapedPath}"
+if echo "$CRED_PATH" | grep -q '^~/'; then
+  CRED_PATH="$HOME/$(echo "$CRED_PATH" | sed 's|^~/||')"
+fi
+CRED_DIR=$(dirname "$CRED_PATH")
+mkdir -p "$CRED_DIR"
+chmod 700 "$CRED_DIR" 2>/dev/null || true
+printf '%b\\n' '${escapedBlock}' > "$CRED_PATH"
+chmod 600 "$CRED_PATH"
+`;
+    try {
+      execSync(
+        `ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 "${user}@${host}" "sh -s"`,
+        { input: script, encoding: 'utf8', timeout: 30000 }
+      );
+      return { success: true, message: `Wrote ${cleanBlock.length} bytes` };
+    } catch (e) {
+      return { success: false, message: `SSH error: ${e.message}` };
+    }
+  }
+
+  const profileName = extractProfileName(credentialsBlock);
 
   const script = `
 set -e
@@ -236,7 +270,7 @@ async function main() {
     return;
   }
 
-  const { credentialsBlock, targets } = message;
+  const { credentialsBlock, targets, writeMode } = message;
 
   if (!credentialsBlock || !targets || !targets.length) {
     sendMessage({ success: false, error: 'Missing credentialsBlock or targets' });
@@ -248,10 +282,10 @@ async function main() {
   for (const target of targets) {
     try {
       if (target.type === 'local') {
-        const result = updateLocal(credentialsBlock, target.credentialsPath);
+        const result = updateLocal(credentialsBlock, target.credentialsPath, writeMode);
         results.push({ target: 'localhost', ...result });
       } else if (target.type === 'ssh') {
-        const result = updateSSH(credentialsBlock, target.user, target.host, target.credentialsPath);
+        const result = updateSSH(credentialsBlock, target.user, target.host, target.credentialsPath, writeMode);
         results.push({ target: `${target.user}@${target.host}`, ...result });
       } else {
         results.push({ target: 'unknown', success: false, message: `Unknown target type: ${target.type}` });

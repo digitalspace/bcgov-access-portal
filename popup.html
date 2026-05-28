@@ -237,6 +237,25 @@
       color: #e65100;
     }
 
+    .target-source {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      background: #f0f0f0;
+      color: #555;
+    }
+
+    .target-source-aws-sso {
+      background: #ede7f6;
+      color: #4527a0;
+    }
+
+    .target-source-nimbus {
+      background: #e0f2f1;
+      color: #00695c;
+    }
+
     .target-info {
       flex: 1;
       color: #666;
@@ -280,12 +299,22 @@
       border-color: #0066cc;
     }
 
-    .ssh-fields {
+    .ssh-fields, .nimbus-fields {
       display: none;
     }
 
-    .ssh-fields.visible {
+    .ssh-fields.visible, .nimbus-fields.visible {
       display: block;
+    }
+
+    .target-env {
+      font-size: 11px;
+      padding: 2px 6px;
+      border-radius: 8px;
+      font-weight: 600;
+      background: #fff3e0;
+      color: #bf360c;
+      text-transform: uppercase;
     }
 
     .setup-notice {
@@ -358,13 +387,32 @@
 
       <div class="add-target-form">
         <div class="form-row">
+          <label for="targetSource">Source</label>
+          <select id="targetSource">
+            <option value="aws-sso">AWS SSO</option>
+            <option value="nimbus">Nimbus</option>
+          </select>
           <label for="targetType">Type</label>
           <select id="targetType">
             <option value="local">Local</option>
             <option value="ssh">SSH</option>
           </select>
+        </div>
+        <div class="form-row">
           <label for="targetLabel">Label</label>
           <input type="text" id="targetLabel" placeholder="e.g. Localhost">
+        </div>
+        <div id="nimbusFields" class="nimbus-fields">
+          <div class="form-row">
+            <label for="targetEnv">Env</label>
+            <select id="targetEnv">
+              <option value="*">All (use {env})</option>
+              <option value="dev">dev</option>
+              <option value="test">test</option>
+              <option value="prod">prod</option>
+              <option value="tools">tools</option>
+            </select>
+          </div>
         </div>
         <div id="sshFields" class="ssh-fields">
           <div class="form-row">

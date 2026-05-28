@@ -203,16 +203,19 @@
       const closeBtn = modalRoot.querySelector('button[aria-label="Close"]');
       if (closeBtn) closeBtn.click();
 
-      // Step 8: Load targets and send to background.
+      // Step 8: Load targets (filter to this script's source) and send to background.
       setButtonState(btn, 'loading', 'Writing credentials...');
       const targets = await new Promise((resolve) => {
         chrome.storage.sync.get(['credentialTargets'], (result) => {
-          resolve(result.credentialTargets || []);
+          const all = result.credentialTargets || [];
+          // Targets without an explicit source predate this field and default
+          // to 'aws-sso' so existing user setups keep working.
+          resolve(all.filter(t => (t.source || 'aws-sso') === 'aws-sso'));
         });
       });
 
       if (targets.length === 0) {
-        throw new Error('No credential targets configured. Add targets in the extension popup.');
+        throw new Error('No AWS SSO targets configured. Add targets in the extension popup.');
       }
 
       // Step 9: Send to background service worker.

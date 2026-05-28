@@ -8,7 +8,8 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       {
         action: 'updateCredentials',
         credentialsBlock: message.credentialsBlock,
-        targets: message.targets
+        targets: message.targets,
+        writeMode: message.writeMode
       },
       (response) => {
         if (chrome.runtime.lastError) {

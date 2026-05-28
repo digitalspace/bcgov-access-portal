@@ -52,6 +52,7 @@ jobs:
           zip -r dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip \
             manifest.json \
             content.js \
+            nimbus-content.js \
             background.js \
             popup.html \
             popup.js \
@@ -90,9 +91,10 @@ jobs:
             - **Windows:** Run `bash native-host/install_win.sh` from Git Bash
 
             ### What's Changed
-            - Adapt to the AWS SSO portal's new treegrid-based account list UI
-            - Move the Update Access Keys button to the end of each account row so it's no longer clipped by the narrow Account Name cell
-            - Reliably close the credentials dialog after syncing (scope the Close button lookup to the modal)
+            - Add support for the Nimbus AWS login portal (`login.nimbus.cloud.gov.bc.ca`): inject an "Update Access Keys" button next to each account's "Click for Credentials" and write the shell-export block to a configured file
+            - Per-environment Nimbus targets (dev / test / prod / tools) with a `{env}` placeholder in the file path so each env writes to its own file
+            - Credential targets are now scoped by source (AWS SSO vs Nimbus); existing AWS SSO targets continue to work unchanged
+            - Native host gains an `overwrite` write mode so Nimbus credentials are written verbatim instead of INI-merged
             - Supports Microsoft Edge, Google Chrome, Chromium, and Brave on Linux and Windows
           files: |
             dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip

@@ -13,13 +13,18 @@ document.addEventListener('DOMContentLoaded', async () => {
   const accessKeysSection = document.getElementById('accessKeysSection');
   const setupNotice = document.getElementById('setupNotice');
   const targetList = document.getElementById('targetList');
+  const targetSource = document.getElementById('targetSource');
   const targetType = document.getElementById('targetType');
   const targetLabel = document.getElementById('targetLabel');
+  const targetEnv = document.getElementById('targetEnv');
+  const nimbusFields = document.getElementById('nimbusFields');
   const sshFields = document.getElementById('sshFields');
   const sshUser = document.getElementById('sshUser');
   const sshHost = document.getElementById('sshHost');
   const credPath = document.getElementById('credPath');
   const addTargetBtn = document.getElementById('addTargetBtn');
+
+  const SOURCE_LABELS = { 'aws-sso': 'AWS SSO', 'nimbus': 'Nimbus' };
 
   // Load and display current mappings
   async function loadMappings() {
@@ -192,11 +197,19 @@ document.addEventListener('DOMContentLoaded', async () => {
       item.className = 'target-item';
 
       const typeClass = target.type === 'ssh' ? 'target-type-ssh' : 'target-type-local';
+      const source = target.source || 'aws-sso';
+      const sourceLabel = SOURCE_LABELS[source] || source;
       const info = target.type === 'ssh'
         ? `${target.user}@${target.host}:${target.credentialsPath}`
         : target.credentialsPath;
 
+      const envBadge = source === 'nimbus' && target.env
+        ? `<span class="target-env">${target.env === '*' ? 'all' : target.env}</span>`
+        : '';
+
       item.innerHTML = `
+        <span class="target-source target-source-${source}">${sourceLabel}</span>
+        ${envBadge}
         <span class="target-type ${typeClass}">${target.type}</span>
         <span class="target-label">${target.label}</span>
         <span class="target-info">${info}</span>
@@ -217,6 +230,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Add a new credential target
   async function addTarget() {
+    const source = targetSource.value;
     const type = targetType.value;
     const label = targetLabel.value.trim();
     const path = credPath.value.trim();
@@ -233,11 +247,21 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     const target = {
-      id: `${type}-${Date.now()}`,
+      id: `${source}-${type}-${Date.now()}`,
       label: label,
+      source: source,
       type: type,
       credentialsPath: path
     };
+
+    if (source === 'nimbus') {
+      target.env = targetEnv.value;
+      if (target.env === '*' && !path.includes('{env}')) {
+        showStatus('Use {env} in the path when env is "All", or pick a specific env', true);
+        credPath.focus();
+        return;
+      }
+    }
 
     if (type === 'ssh') {
       const user = sshUser.value.trim();
@@ -257,7 +281,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // Reset form
     targetLabel.value = '';
-    credPath.value = '~/.aws/credentials';
+    credPath.value = DEFAULT_PATH[targetSource.value] || '~/.aws/credentials';
     sshUser.value = '';
     sshHost.value = '';
 
@@ -311,6 +335,24 @@ document.addEventListener('DOMContentLoaded', async () => {
   targetType.addEventListener('change', () => {
     sshFields.className = targetType.value === 'ssh' ? 'ssh-fields visible' : 'ssh-fields';
   });
+
+  // Swap defaults when source changes — Nimbus writes raw shell exports, so
+  // it must not clobber the user's ~/.aws/credentials, and gets its own
+  // per-env path templating.
+  const DEFAULT_PATH = {
+    'aws-sso': '~/.aws/credentials',
+    'nimbus': '~/.aws/nimbus-{env}.env'
+  };
+  const KNOWN_DEFAULTS = new Set(Object.values(DEFAULT_PATH).concat(['~/.aws/nimbus.env']));
+  function applySourceDefaults() {
+    const def = DEFAULT_PATH[targetSource.value];
+    if (def && (KNOWN_DEFAULTS.has(credPath.value) || credPath.value === '')) {
+      credPath.value = def;
+    }
+    nimbusFields.className = targetSource.value === 'nimbus' ? 'nimbus-fields visible' : 'nimbus-fields';
+  }
+  targetSource.addEventListener('change', applySourceDefaults);
+  applySourceDefaults();
 
   addTargetBtn.addEventListener('click', addTarget);
 
