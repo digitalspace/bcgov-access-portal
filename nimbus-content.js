@@ -19,15 +19,17 @@
     });
   }
 
-  // Load Nimbus targets, filtered to those matching `env` (or env='*' wildcard).
-  // {env} placeholders in the path are substituted before sending.
+  // Load Nimbus targets matching this env. Targets must explicitly declare an
+  // env (either '*' wildcard or the specific env name) — a missing env field
+  // is treated as a misconfigured legacy target and skipped (the popup flags
+  // these so the user can delete them).
   async function loadTargets(env) {
     return new Promise((resolve) => {
       chrome.storage.sync.get(['credentialTargets'], (result) => {
         const all = result.credentialTargets || [];
         const matching = all
           .filter(t => (t.source || 'aws-sso') === SOURCE)
-          .filter(t => !t.env || t.env === '*' || t.env === env)
+          .filter(t => t.env === '*' || t.env === env)
           .map(t => ({ ...t, credentialsPath: (t.credentialsPath || '').replace(/\{env\}/g, env) }));
         resolve(matching);
       });
@@ -127,8 +129,13 @@
       });
 
       if (response && response.success) {
-        const ok = response.results.filter(r => r.success).length;
-        setButtonState(btn, 'success', `Updated ${ok}/${response.results.length} targets`);
+        const okResults = response.results.filter(r => r.success);
+        const paths = okResults.map(r => r.path).filter(Boolean);
+        const summary = paths.length === 1
+          ? `Wrote ${paths[0]}`
+          : `Updated ${okResults.length}/${response.results.length} targets`;
+        setButtonState(btn, 'success', summary);
+        if (paths.length) btn.title = paths.join('\n');
       } else {
         const errMsg = response ? (response.error || 'Native host error') : 'No response from native host';
         setButtonState(btn, 'error', errMsg);

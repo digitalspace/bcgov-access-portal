@@ -203,9 +203,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         ? `${target.user}@${target.host}:${target.credentialsPath}`
         : target.credentialsPath;
 
-      const envBadge = source === 'nimbus' && target.env
-        ? `<span class="target-env">${target.env === '*' ? 'all' : target.env}</span>`
-        : '';
+      let envBadge = '';
+      if (source === 'nimbus') {
+        if (!target.env) {
+          envBadge = `<span class="target-env target-env-missing" title="Legacy target with no env — will not fire. Delete and re-add.">no env</span>`;
+        } else {
+          envBadge = `<span class="target-env">${target.env === '*' ? 'all' : target.env}</span>`;
+        }
+      }
 
       item.innerHTML = `
         <span class="target-source target-source-${source}">${sourceLabel}</span>

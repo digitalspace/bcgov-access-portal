@@ -91,10 +91,8 @@ jobs:
             - **Windows:** Run `bash native-host/install_win.sh` from Git Bash
 
             ### What's Changed
-            - Add support for the Nimbus AWS login portal (`login.nimbus.cloud.gov.bc.ca`): inject an "Update Access Keys" button next to each account's "Click for Credentials" and write the shell-export block to a configured file
-            - Per-environment Nimbus targets (dev / test / prod / tools) with a `{env}` placeholder in the file path so each env writes to its own file
-            - Credential targets are now scoped by source (AWS SSO vs Nimbus); existing AWS SSO targets continue to work unchanged
-            - Native host gains an `overwrite` write mode so Nimbus credentials are written verbatim instead of INI-merged
+            - Fix Nimbus targets without an `env` field firing on every environment — env matching is now strict; legacy targets are flagged with a red "no env" badge in the popup and must be deleted and re-added
+            - Success message on the Nimbus button now shows the actual path written, so misrouting is visible
             - Supports Microsoft Edge, Google Chrome, Chromium, and Brave on Linux and Windows
           files: |
             dist/bcgov-access-portal-${{ steps.bump_version.outputs.new_version }}.zip

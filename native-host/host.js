@@ -155,7 +155,7 @@ function updateLocal(credentialsBlock, credentialsPath, writeMode) {
     const content = credentialsBlock.replace(/\r/g, '');
     const normalized = content.endsWith('\n') ? content : content + '\n';
     fs.writeFileSync(filePath, normalized, { mode: 0o600 });
-    return { success: true, message: `Wrote ${normalized.length} bytes` };
+    return { success: true, path: filePath, message: `Wrote ${normalized.length} bytes to ${filePath}` };
   }
 
   let existing = '';
@@ -193,7 +193,7 @@ chmod 600 "$CRED_PATH"
         `ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 "${user}@${host}" "sh -s"`,
         { input: script, encoding: 'utf8', timeout: 30000 }
       );
-      return { success: true, message: `Wrote ${cleanBlock.length} bytes` };
+      return { success: true, path: credentialsPath, message: `Wrote ${cleanBlock.length} bytes to ${user}@${host}:${credentialsPath}` };
     } catch (e) {
       return { success: false, message: `SSH error: ${e.message}` };
     }
