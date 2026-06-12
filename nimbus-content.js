@@ -9,6 +9,20 @@
   const SOURCE = 'nimbus';
 
   let accessKeysEnabled = false;
+  let sessionRefreshClicked = false;
+
+  // The page's own timer replaces #sessiontimer with
+  // "Session Expired: <a href=...>Refresh</a>" when the SAML session runs out.
+  // Auto-click that link so the session silently re-establishes via SSO.
+  function autoRefreshExpiredSession() {
+    if (sessionRefreshClicked) return;
+    const timer = document.getElementById('sessiontimer');
+    if (!timer || !/session expired/i.test(timer.textContent)) return;
+    const link = timer.querySelector('a');
+    if (!link) return;
+    sessionRefreshClicked = true;
+    link.click();
+  }
 
   async function loadAccessKeysEnabled() {
     return new Promise((resolve) => {
@@ -184,6 +198,7 @@
   async function init() {
     await loadAccessKeysEnabled();
     injectButtons();
+    autoRefreshExpiredSession();
   }
 
   if (document.readyState === 'loading') {
@@ -192,8 +207,12 @@
     init();
   }
 
-  // Re-inject when accounts render or accordion changes
-  const observer = new MutationObserver(() => injectButtons());
+  // Re-inject when accounts render or accordion changes; the same observer
+  // catches the #sessiontimer flip to "Session Expired".
+  const observer = new MutationObserver(() => {
+    injectButtons();
+    autoRefreshExpiredSession();
+  });
   observer.observe(document.body, { childList: true, subtree: true });
 
   // Popup can request a refresh after settings change
